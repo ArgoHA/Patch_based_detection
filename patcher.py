@@ -16,7 +16,7 @@ class Patcher:
         self.base_path = base_path
 
     def create_folders(self) -> None:
-        self.path_to_save.mkdir(exist_ok=True)
+        self.path_to_save.mkdir(parents=True, exist_ok=True)
         (self.path_to_save / "images").mkdir(exist_ok=True)
         (self.path_to_save / "labels").mkdir(exist_ok=True)
 
@@ -106,24 +106,35 @@ class Patcher:
 
 
 def main():
+    '''
+    base path structure:
+
+    -> dataset
+    ---> train
+    -----> images (folder with images)
+    -----> labels (folder with labels)
+    ---> valid
+    -----> images (folder with images)
+    -----> labels (folder with labels)
+    '''
+
     base_path = Path("")
 
     # path were you want to save patched dataset
-    path_to_save = base_path / "patched_dataset"
+    path_to_save = Path("")
 
-    # path where your images are (labels folder should be in the same directory where images folder is)
-    images_folder_path = base_path / "images"
+    for split in ['train', 'valid']:
+        images_folder_path = base_path / split / "images"
 
-    patcher = Patcher(path_to_save, base_path)
+        patcher = Patcher(path_to_save / split, base_path / split)
 
-    for image_path in images_folder_path.glob("*"):
-        if image_path.name.startswith("."):
-            continue
+        for image_path in images_folder_path.glob("*"):
+            if image_path.name.startswith("."):
+                continue
+            image = io.imread(image_path)
+            fname = image_path.stem
 
-        image = io.imread(image_path)
-        fname = image_path.stem
-
-        patcher.patch_sampler(image, fname)
+            patcher.patch_sampler(image, fname)
 
 
 if __name__ == "__main__":
